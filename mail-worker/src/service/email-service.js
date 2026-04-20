@@ -163,7 +163,7 @@ const emailService = {
 			attachments //附件
 		} = params;
 
-		const { resendTokens, r2Domain, send, domainList } = await settingService.query(c);
+		const { resendTokens, r2Domain, send, domainList, emailProvider } = await settingService.query(c);
 
 		let { imageDataList, html } = await attService.toImageUrlHtml(c, content);
 
@@ -229,11 +229,20 @@ const emailService = {
 		}
 
 		const domain = emailUtils.getDomain(accountRow.email);
-		const resendToken = resendTokens[domain];
 
-		//如果接收方存在站外邮箱，又没有resend token
-		if (!resendToken && !allInternal) {
-			throw new BizError(t('noResendToken'));
+		//判断邮件提供商和对应的配置
+		const useCloudflare = emailProvider === settingConst.emailProvider.CLOUDFLARE;
+
+		if (!allInternal) {
+			if (useCloudflare && !c.env.EMAIL) {
+				throw new BizError(t('noCfBinding'));
+			}
+			if (!useCloudflare) {
+				const resendToken = resendTokens[domain];
+				if (!resendToken) {
+					throw new BizError(t('noResendToken'));
+				}
+			}
 		}
 
 		//没有发件人名字自动截取
@@ -258,28 +267,60 @@ const emailService = {
 
 		let resendResult = {};
 
-		//存在站外时邮箱全部由resend发送
+		//存在站外邮箱时发送
 		if (!allInternal) {
 
-			const resend = new Resend(resendToken);
+			if (useCloudflare && c.env.EMAIL) {
+				//使用 Cloudflare Workers API binding 发送
+				const cfAttachments = [...imageDataList, ...attachments].map(att => ({
+					content: att.content,
+					filename: att.filename,
+					type: att.contentType || att.type,
+					disposition: att.disposition || 'attachment'
+				}));
 
-			const sendForm = {
-				from: `${name} <${accountRow.email}>`,
-				to: [...receiveEmail],
-				subject: subject,
-				text: text,
-				html: html,
-				attachments: [...imageDataList, ...attachments]
-			};
-
-			if (sendType === 'reply') {
-				sendForm.headers = {
-					'in-reply-to': emailRow.messageId,
-					'references': emailRow.messageId
+				const cfSendForm = {
+					to: [...receiveEmail],
+					from: { email: accountRow.email, name: name },
+					subject: subject,
+					text: text,
+					html: html,
+					attachments: cfAttachments
 				};
-			}
 
-			resendResult = await resend.emails.send(sendForm);
+				if (sendType === 'reply') {
+					cfSendForm.headers = {
+						'in-reply-to': emailRow.messageId,
+						'references': emailRow.messageId
+					};
+				}
+
+				const cfResult = await c.env.EMAIL.send(cfSendForm);
+				resendResult = { data: { id: cfResult.messageId } };
+
+			} else {
+				//使用 Resend 发送
+				const resendToken = resendTokens[domain];
+				const resend = new Resend(resendToken);
+
+				const sendForm = {
+					from: `${name} <${accountRow.email}>`,
+					to: [...receiveEmail],
+					subject: subject,
+					text: text,
+					html: html,
+					attachments: [...imageDataList, ...attachments]
+				};
+
+				if (sendType === 'reply') {
+					sendForm.headers = {
+						'in-reply-to': emailRow.messageId,
+						'references': emailRow.messageId
+					};
+				}
+
+				resendResult = await resend.emails.send(sendForm);
+			}
 
 		}
 

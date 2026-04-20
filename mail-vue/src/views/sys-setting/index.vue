@@ -177,6 +177,20 @@
                 </div>
               </div>
               <div class="setting-item">
+                <div><span>{{ $t('emailProvider') }}</span></div>
+                <div>
+                  <el-radio-group v-model="setting.emailProvider" @change="changeEmailProvider">
+                    <el-radio value="resend">Resend</el-radio>
+                    <el-radio value="cloudflare">{{ $t('cfProvider') }}</el-radio>
+                  </el-radio-group>
+                </div>
+              </div>
+              <div v-if="setting.emailProvider === 'cloudflare'" class="setting-item">
+                <div style="flex: 1;">
+                  <el-text type="info" size="small">{{ $t('cfProviderTip') }}</el-text>
+                </div>
+              </div>
+              <div v-if="setting.emailProvider !== 'cloudflare'" class="setting-item">
                 <div><span>{{ $t('resendToken') }}</span></div>
                 <div>
                   <el-button class="opt-button" style="margin-top: 0" @click="openResendList" size="small"
@@ -1239,6 +1253,11 @@ function openCut() {
 function saveR2domain() {
   const settingForm = {r2Domain: r2DomainInput.value}
   editSetting(settingForm)
+}
+
+function changeEmailProvider(val) {
+  backupSetting()
+  editSetting({emailProvider: val}, false)
 }
 
 function openResendForm() {
