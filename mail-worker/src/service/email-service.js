@@ -271,6 +271,16 @@ const emailService = {
 		if (!allInternal) {
 
 			if (useCloudflare && c.env.EMAIL) {
+
+				//检查 Cloudflare 邮件发送全局额度
+				const globalSendTotal = Number(await c.env.kv.get(kvConst.SEND_TOTAL_COUNT)) || 0;
+				if (globalSendTotal >= 1000) {
+					throw new BizError(t('globalSendLimit'), 403);
+				}
+				if (globalSendTotal + receiveEmail.length > 1000) {
+					throw new BizError(t('globalSendLack'), 403);
+				}
+
 				//使用 Cloudflare Workers API binding 发送
 				const cfAttachments = [...imageDataList, ...attachments].map(att => ({
 					content: att.content,
@@ -404,6 +414,12 @@ const emailService = {
 			daySendTotal = Number(daySendTotal) + receiveEmail.length
 			await c.env.kv.put(kvConst.SEND_DAY_COUNT + dateStr, JSON.stringify(daySendTotal), { expirationTtl: 60 * 60 * 24 });
 		}
+
+			//记录 Cloudflare 邮件发送全局额度
+			if (!allInternal && useCloudflare) {
+				const currentTotal = Number(await c.env.kv.get(kvConst.SEND_TOTAL_COUNT)) || 0;
+				await c.env.kv.put(kvConst.SEND_TOTAL_COUNT, JSON.stringify(currentTotal + receiveEmail.length));
+			}
 
 		return [ emailResult ];
 	},

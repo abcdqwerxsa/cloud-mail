@@ -49,6 +49,7 @@ const analysisService = {
 			analysisDao.sendDayCount(c, diffHours),
 
 			c.env.kv.get(kvConst.SEND_DAY_COUNT + dayjs().format('YYYY-MM-DD')),
+			c.env.kv.get(kvConst.SEND_TOTAL_COUNT),
 		]);
 
 
@@ -68,7 +69,9 @@ const analysisService = {
 				receiveDayCount,
 				sendDayCount
 			},
-			daySendTotal: Number(daySendTotal)
+			daySendTotal: Number(daySendTotal),
+			globalSendTotal: Number(globalSendTotalRaw || 0),
+			globalSendLimit: 1000
 		};
 	},
 

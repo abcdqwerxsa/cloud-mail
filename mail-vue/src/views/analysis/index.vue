@@ -110,7 +110,10 @@
           <div class="email-column"></div>
         </div>
         <div class="picture-cs-item">
-          <div class="title">{{ $t('sentToday') }}</div>
+          <div class="title" style="display: flex;justify-content: space-between;">
+            <span>{{ $t('sendQuota') }}</span>
+            <span style="font-size:14px;font-weight:400;">{{ $t('sendQuotaUsed') }}：{{ globalSendTotal }} / {{ globalSendLimit }}</span>
+          </div>
           <div class="send-count"></div>
         </div>
       </div>
@@ -197,6 +200,8 @@ const topic = computed(() => ({
   containerBackground: uiStore.dark ? '#6C6E72' : '#E6EBF8'
 }))
 let daySendTotal = 0
+let globalSendTotal = 0
+let globalSendLimit = 1000
 let leaveWidth = 0
 let senderPie = null
 let increaseLine = null
@@ -237,6 +242,8 @@ onMounted(() => {
     emailColumnData.receiveData = data.emailDayCount.receiveDayCount.map(item => item.total)
     emailColumnData.sendData = data.emailDayCount.sendDayCount.map(item => item.total)
     daySendTotal = data.daySendTotal
+    globalSendTotal = data.globalSendTotal
+    globalSendLimit = data.globalSendLimit
     analysisLoading.value = false
     initPicture();
     first = false
@@ -655,35 +662,42 @@ function createSendGauge() {
     sendGauge.dispose()
   }
   sendGauge = echarts.init(document.querySelector(".send-count"));
+
+  const usedRatio = globalSendTotal / globalSendLimit;
+  const gaugeColor = usedRatio >= 1 ? '#F56C6C' : usedRatio >= 0.8 ? '#E6A23C' : '#3CB2FF';
+
   let option = {
     tooltip: {
       textStyle: {
         color: topic.value.color
       },
-      backgroundColor: topic.value.background
+      backgroundColor: topic.value.background,
+      formatter: () => `${globalSendTotal} / ${globalSendLimit}`
     },
     series: [{
-      name: t('sentToday'),
+      name: t('sendQuota'),
       type: 'gauge',
-      max: 100,
-      // 进度条颜色（新增）
+      max: globalSendLimit,
+      // 进度条颜色
       progress: {
         show: true,
         roundCap: true,
         itemStyle: {
-          color: '#3CB2FF'
+          color: gaugeColor
         }
       },
-      // 指针颜色（新增）
+      // 指针颜色
       pointer: {
         itemStyle: {
-          color: '#3CB2FF'
+          color: gaugeColor
         }
       },
       axisLabel: {
         color: topic.value.gaugeSplitLine,
+        fontSize: 11,
+        distance: 8
       },
-      // 轴线背景色（新增）
+      // 轴线背景色
       axisLine: {
         roundCap: true,
         lineStyle: {
@@ -692,27 +706,27 @@ function createSendGauge() {
       },
       splitLine: {
         lineStyle: {
-          color: topic.value.gaugeSplitLine, // 大刻度线颜色
+          color: topic.value.gaugeSplitLine,
         }
       },
-      // 刻度颜色（新增）
+      // 刻度颜色
       axisTick: {
         lineStyle: {
           color: topic.value.axisColor
         }
       },
-      // 中心文字颜色（新增）
+      // 中心文字颜色
       detail: {
         valueAnimation: true,
-        formatter: '{value}',
-        color: topic.value.color // 黑色文字
+        formatter: `{value}`,
+        color: topic.value.color,
+        fontSize: 20
       },
       data: [{
-        value: daySendTotal,
-        name: t('total'),
-        // 名称标签颜色（新增）
+        value: globalSendTotal,
+        name: t('sendQuota'),
         title: {
-          color: topic.value.color  // 灰色标签
+          color: topic.value.color
         }
       }]
     }],

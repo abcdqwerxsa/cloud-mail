@@ -46,6 +46,8 @@ const zh = {
     emailSent: '发送',
     emailReceived: '接收',
     sentToday: '今日发件',
+    sendQuota: '发件额度',
+    sendQuotaUsed: '已用 / 总额度',
     total: '次数',
     growthTotalUsers: '用户数',
     searchByEmail: '输入邮箱搜索',

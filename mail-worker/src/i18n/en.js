@@ -19,6 +19,8 @@ const en = {
 	totalSendLimit: 'Total send limit reached',
 	daySendLack: 'Not enough remaining sends today',
 	totalSendLack: 'Not enough total remaining sends',
+	globalSendLimit: 'System email send quota exhausted',
+	globalSendLack: 'Not enough system email send quota remaining',
 	senderAccountNotExist: 'Sender email does not exist',
 	noResendToken: 'Resend API token not configured',
 	sendEmailNotCurUser: 'Sender email does not belong to current user',

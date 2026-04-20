@@ -19,6 +19,8 @@ const zh = {
 	totalSendLimit: '发送次数已到达限制',
 	daySendLack: '当日剩余发送次数不足',
 	totalSendLack: '剩余发送次数不足',
+	globalSendLimit: '系统邮件发送额度已用尽',
+	globalSendLack: '系统邮件发送额度不足',
 	senderAccountNotExist: '发件人邮箱不存在',
 	noResendToken: 'Resend未配置，只能给站内邮箱发件',
 	sendEmailNotCurUser: '发件人邮箱非当前用户所有',

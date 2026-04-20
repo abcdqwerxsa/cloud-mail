@@ -46,6 +46,8 @@ const en = {
     emailSent: 'Sent',
     emailReceived: 'Received',
     sentToday: 'Sent Today',
+    sendQuota: 'Send Quota',
+    sendQuotaUsed: 'Used / Total',
     total: 'Total',
     growthTotalUsers: 'Total Users',
     searchByEmail: 'Enter email to search',
