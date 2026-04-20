@@ -31,7 +31,8 @@ const analysisService = {
 			userDayCountRaw,
 			receiveDayCountRaw,
 			sendDayCountRaw,
-			daySendTotalRaw
+			daySendTotalRaw,
+			globalSendTotalRaw
 		] = await Promise.all([
 			analysisDao.numberCount(c),
 
